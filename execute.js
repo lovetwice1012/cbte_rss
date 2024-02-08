@@ -4,7 +4,7 @@ const connection = mysql.createConnection({
     host: 'localhost',
     user: 'comebacktwitterembed',
     password: 'bluebird',
-    database: 'comebacktwitterembed'
+    database: 'ComebackTwitterEmbed'
 });
 
 connection.connect(async (err) => {
