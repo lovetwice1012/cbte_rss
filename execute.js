@@ -93,7 +93,6 @@ async function execute() {
                 const data = JSON.stringify({
                     content: stringsArray[j]
                 });
-                // rss[i].webhook example https://discord.com/api/webhooks/1205121313308545034/BHgBDnguZ9d5ji4dA-l1IFHI-uMQXvfbSoF30LxiCVTZ25R2Wz__ZvqRjo0U3w_9IIGg
                 const options = {
                     hostname: 'discord.com',
                     port: 443,
