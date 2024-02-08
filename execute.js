@@ -117,7 +117,7 @@ async function execute() {
         }
         //最後にlastextractedを更新
         await new Promise((resolve, reject) => {
-            connection.query('UPDATE rss SET lastextracted = ? WHERE userid = ? AND guildid = ? AND channelid = ?', [Date.now(), rss[i].userid, rss[i].guildid, rss[i].channelid], (err) => {
+            connection.query('UPDATE rss SET lastextracted = ? WHERE userid = ?', [Date.now(), rss[i].userid], (err) => {
                 if (err) reject(err);
                 resolve();
             });
