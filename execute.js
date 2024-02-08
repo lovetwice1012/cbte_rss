@@ -118,7 +118,7 @@ async function execute() {
             }
             //最後にlastextractedを更新
             await new Promise((resolve, reject) => {
-                connection.query('UPDATE rss SET lastextracted = ? WHERE username = ?', [Date.now(), rss[i].username], (err) => {
+                connection.query('UPDATE rss SET lastextracted = ? WHERE username = ? AND webhook = ?', [Date.now(), rss[i].username, rss[i].webhook], (err) => {
                     if (err) reject(err);
                     resolve();
                 });
