@@ -128,9 +128,5 @@ connection.connect(async (err) => {
     if (err) throw err;
     console.log('Connected!');
     execute();
-    //15分おきに実行
-    setInterval(async () => {
-        execute();
-    }, 900000);
 });
 
