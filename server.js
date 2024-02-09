@@ -22,7 +22,9 @@ const connection = mysql.createConnection({
     database: 'ComebackTwitterEmbed'
 });
 
-const allowed_nonpremium_users_count = 20; 
+const allowed_nonpremium_users_count = 20;
+//02/09 18:00
+const deny_before_timestamp = 1707469200;
 
 // MySQLに接続
 connection.connect((err) => {
@@ -60,6 +62,12 @@ app.get('/callback', async (req, res) => {
     });
     const user = await oauth.getUser(token.access_token);
     const guilds = await oauth.getUserGuilds(token.access_token);
+
+    if(new Date().getTime() < deny_before_timestamp){
+        res.send('条件を満たしていません。公式サーバーのアナウンスチャンネルを確認してください。');
+        return;
+    }
+
     //サーバーID1132814274734067772のサーバーに所属しているか確認
     const server = guilds.find(g => g.id === "1132814274734067772");
     if (!server) {
