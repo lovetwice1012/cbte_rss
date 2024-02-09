@@ -6,6 +6,15 @@ const connection = mysql.createConnection({
     password: 'bluebird',
     database: 'ComebackTwitterEmbed'
 });
+
+process.on('uncaughtException', function (err) {
+    console.log(err);
+});
+
+process.on('unhandledRejection', function (err) {
+    console.log(err);
+});
+
 async function execute() {
     return new Promise(async (resolve, reject) => {
         //RSSテーブルからデータを取得して変数rssに格納
