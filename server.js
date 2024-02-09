@@ -116,7 +116,7 @@ app.post('/register', (req, res) => {
     const premium_code = req.body.premium_code;
     //データがundefinedかnullか空文字か確認
     if (!userid || !username || !webhook || !premium) {
-        res.send('登録に失敗しました');
+        res.send('登録に失敗しました(パラメーター異常)');
         return;
     }
     //premiumが1の場合
@@ -158,7 +158,7 @@ app.post('/register', (req, res) => {
                     res.send('登録が完了しました');
                 });
             } else {
-                res.send('登録に失敗しました');
+                res.send('登録に失敗しました(パラメーター不正)');
             }
         });
     }
