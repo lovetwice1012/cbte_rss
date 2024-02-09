@@ -8,10 +8,13 @@
         <h1>新規登録(編集はできません。discordID:yussyにお問い合わせください)</h1>
         <form action="register" method="post">
             <input type="hidden" name="userid" id="userid" required>
+            <p>自動取得したいTwitterアカウントのUseridを入力してください。</p>
             <input type="text" name="username" placeholder="自動取得したいTwitterアカウントのUserid" required></br>
+            <p>自動展開先のチャンネルのwebhookURLを入力してください。</p>
             <input type="text" name="webhook" placeholder="自動展開先のチャンネルのwebhookURL" required></br>
             <input type="hidden" name="premium" id="premium" value="0" required>
-            <input type="text" name="premium_code" id="premium_code" style="visibility: hidden;" value=""></br>
+            <p id="premium_code_info" style="visibility: hidden;">プレミアム登録用のコードがある場合は入力してください。</p>
+            <input type="text" name="premium_code" id="premium_code" style="visibility: hidden;" placeholder="入力を指示された認証コード"></br>
             <input type="submit" value="登録">
         </form>
     </div>
@@ -50,6 +53,8 @@
             document.getElementById('premium').value = premium;
             //premium_codeを表示
             document.getElementById('premium_code').style.visibility = "visible";
+            //premium_code_infoを表示
+            document.getElementById('premium_code_info').style.visibility = "visible";
             //premium_codeを必須にする
             document.getElementById('premium_code').required = true;
         }
