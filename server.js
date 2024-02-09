@@ -12,7 +12,7 @@ const connection = mysql.createConnection({
     database: 'ComebackTwitterEmbed'
 });
 
-const allowed_nonpremium_users_count = 0; 
+const allowed_nonpremium_users_count = 20; 
 
 // MySQLに接続
 connection.connect((err) => {
