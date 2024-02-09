@@ -109,9 +109,9 @@ app.get('/register', (req, res) => {
 
 app.post('/register', (req, res) => {
     //POSTされたデータを受け取る
-    const userid = req.query.userid;
-    const username = req.query.username;
-    const webhook = req.query.webhook;
+    const userid = req.body.userid;
+    const username = req.body.username;
+    const webhook = req.body.webhook;
     const premium = req.body.premium;
     const premium_code = req.body.premium_code;
     //データがundefinedかnullか空文字か確認
