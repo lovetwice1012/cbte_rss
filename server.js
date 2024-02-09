@@ -75,7 +75,7 @@ app.get('/callback', async (req, res) => {
         return;
     }
     //rssテーブルに同じuseridでpremium_flagが0のものがあるか確認
-    connection.query('SELECT * FROM rss WHERE userid = ? AND premium_flag = 0 username NOT NULL AND webhook NOT NULL', [user.id], (err, result) => {
+    connection.query('SELECT * FROM rss WHERE userid = ? AND premium_flag = 0 username IS NOT NULL AND webhook IS NOT NULL', [user.id], (err, result) => {
         if (err) {
             console.error('Error executing query:', err);
             return;
