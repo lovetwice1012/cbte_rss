@@ -58,6 +58,26 @@
             //premium_codeを必須にする
             document.getElementById('premium_code').required = true;
         }
+
+        document.getElementById('username').addEventListener('change', function() {
+            var username = document.getElementById('username').value;
+            //usernameに英語と_と数字以外が含まれているか確認
+            if(username.match(/[^a-zA-Z0-9_]/)){
+                alert("usernameには英語と_と数字以外は使用できません。");
+                document.getElementById('username').value = "";
+            }
+        });
+
+        document.getElementById('webhook').addEventListener('change', function() {
+            var webhook = document.getElementById('webhook').value;
+            //webhookにhttps://discord.com/api/webhooks/が含まれているか確認
+            if(!webhook.match(/https:\/\/discord.com\/api\/webhooks\//)){
+                alert("webhookにはhttps://discord.com/api/webhooks/から始まるURLを入力してください。");
+                document.getElementById('webhook').value = "";
+            }
+        });
+
+        
     </script>
 </body>
 </html>
