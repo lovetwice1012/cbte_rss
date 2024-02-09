@@ -22,7 +22,7 @@ const connection = mysql.createConnection({
     database: 'ComebackTwitterEmbed'
 });
 
-const allowed_nonpremium_users_count = 20;
+const allowed_nonpremium_users_count = 75;
 //02/09 18:00
 const deny_before_timestamp = 1707469200;
 
@@ -80,9 +80,9 @@ app.get('/callback', async (req, res) => {
             console.error('Error executing query:', err);
             return;
         }
-        if (result.length > 0) {
+        if (result.length > 5) {
             //あれば登録を拒否する
-            res.send('すでに登録されています');
+            res.send('すでに最大数登録されています');
         } else {
             //なければ新規作成
             //もしpremium_flagが1のものがあればregister?premium=1にリダイレクト
