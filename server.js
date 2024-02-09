@@ -160,7 +160,7 @@ app.post('/register', (req, res) => {
             }
             if (result.length > 0) {
                 //あればusernameとwebhookを更新
-                connection.query('UPDATE rss SET username = ?, webhook = ? WHERE userid = ? AND premium_flag = 1 AND username IS NULL AND webhook IS NULL AND premium_code = ?', [username, webhook, userid, premium_code], (err, result) => {
+                connection.query('UPDATE rss SET username = ?, webhook = ? WHERE userid = ?, lastextracted = ? AND premium_flag = 1 AND username IS NULL AND webhook IS NULL AND premium_code = ?', [username, webhook, new Date().getTime(), userid, premium_code], (err, result) => {
                     if (err) {
                         console.error('Error executing query:', err);
                         return;
@@ -181,7 +181,7 @@ app.post('/register', (req, res) => {
             }
             if (result.length > 0) {
                 //あればusernameとwebhookを更新
-                connection.query('UPDATE rss SET username = ?, webhook = ? WHERE userid = ? AND premium_flag = 0 AND username IS NULL AND webhook IS NULL', [username, webhook, userid], (err, result) => {
+                connection.query('UPDATE rss SET username = ?, webhook = ?, lastextracted = ? WHERE userid = ? AND premium_flag = 0 AND username IS NULL AND webhook IS NULL', [username, webhook, new Date().getTime(), userid], (err, result) => {
                     if (err) {
                         console.error('Error executing query:', err);
                         return;
