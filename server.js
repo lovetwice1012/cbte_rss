@@ -5,6 +5,16 @@ const port = 3844;
 const crypto = require('crypto')
 const DiscordOauth2 = require("discord-oauth2");
 const mysql = require('mysql');
+
+process.on('uncaughtException', function (err) {
+    console.log(err);
+});
+
+process.on('unhandledRejection', function (err) {
+    console.log(err);
+});
+
+
 const connection = mysql.createConnection({
     host: '192.168.100.22',
     user: 'comebacktwitterembed',
