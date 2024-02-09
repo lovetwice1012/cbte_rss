@@ -1,4 +1,5 @@
 const expless = require('express');
+const bodyParser = require('body-parser');
 const app = expless();
 const port = 3844;
 const crypto = require('crypto')
@@ -28,6 +29,8 @@ const oauth = new DiscordOauth2({
 	redirectUri: "https://autoextract.sprink.cloud/callback",
     //redirectUri: "http://localhost:3040/callback",
 });
+
+app.use(bodyParser.urlencoded({ extended: true }));
 
 app.get('/', (req, res) => {
     const url = oauth.generateAuthUrl({
@@ -106,9 +109,9 @@ app.get('/register', (req, res) => {
 
 app.post('/register', (req, res) => {
     //POSTされたデータを受け取る
-    const userid = req.body.userid;
-    const username = req.body.username;
-    const webhook = req.body.webhook;
+    const userid = req.query.userid;
+    const username = req.query.username;
+    const webhook = req.query.webhook;
     const premium = req.body.premium;
     const premium_code = req.body.premium_code;
     //データがundefinedかnullか空文字か確認
