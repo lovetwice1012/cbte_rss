@@ -28,6 +28,8 @@ async function execute() {
         });
         //取得したデータを一つずつ処理
         for (let i = 0; i < rss.length; i++) {
+            if(rss[i].webhook === null) continue;
+            if(rss[i].username === null) continue;
             // "https://nitter.sprink.cloud/{username}/rss" にアクセスして、XMLを取得
             let xml = {};
             try {
