@@ -63,7 +63,7 @@ app.get('/callback', async (req, res) => {
     const user = await oauth.getUser(token.access_token);
     const guilds = await oauth.getUserGuilds(token.access_token);
 
-    if(new Date().getTime() < deny_before_timestamp){
+    if(new Date().getTime() / 1000 < deny_before_timestamp){
         res.send('条件を満たしていません。公式サーバーのアナウンスチャンネルを確認してください。');
         return;
     }
