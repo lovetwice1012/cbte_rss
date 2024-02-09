@@ -68,7 +68,7 @@ app.get('/callback', async (req, res) => {
         } else {
             //なければ新規作成
             //もしpremium_flagが1のものがあればregister?premium=1にリダイレクト
-            connection.query('SELECT * FROM rss WHERE userid = ? AND premium_flag = 1 AND username = NULL AND webhook = NULL', [user.id], (err, result) => {
+            connection.query('SELECT * FROM rss WHERE userid = ? AND premium_flag = 1 AND username IS NULL AND webhook IS NULL', [user.id], (err, result) => {
                 if (err) {
                     console.error('Error executing query:', err);
                     return;
