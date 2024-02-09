@@ -33,6 +33,7 @@ async function execute() {
                 }
             }
         }
+        connection.end();
     });
 }
 
