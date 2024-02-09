@@ -24,7 +24,8 @@ const connection = mysql.createConnection({
 
 const allowed_nonpremium_users_count = 20;
 //02/09 18:00
-const deny_before_timestamp = 1707469200;
+//const deny_before_timestamp = 1707469200;
+const deny_before_timestamp = 1707463200
 
 // MySQLに接続
 connection.connect((err) => {
