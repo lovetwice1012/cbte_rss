@@ -11,7 +11,7 @@
             <input type="text" name="username" placeholder="自動取得したいTwitterアカウントのUserid" required></br>
             <input type="text" name="webhook" placeholder="自動展開先のチャンネルのwebhookURL" required></br>
             <input type="hidden" name="premium" value="0" required>
-            <input type="text" name="premium_code" id="premium_code" style="visibility: hidden;" value="" required></br>
+            <input type="text" name="premium_code" id="premium_code" style="visibility: hidden;" value=""></br>
             <input type="submit" value="登録">
         </form>
     </div>
@@ -50,6 +50,8 @@
             document.getElementById('premium_code').value = premium;
             //premium_codeを表示
             document.getElementById('premium_code').style.visibility = "visible";
+            //premium_codeを必須にする
+            document.getElementById('premium_code').required = true;
         }
     </script>
 </body>
