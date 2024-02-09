@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Register</title>
+</head>
+<body>
+    <div class="register">
+        <h1>新規登録(編集はできません。discordID:yussyにお問い合わせください)</h1>
+        <form action="register" method="post">
+            <input type="hidden" name="userid" id="userid" required>
+            <input type="text" name="username" placeholder="自動取得したいTwitterアカウントのUserid" required></br>
+            <input type="text" name="webhook" placeholder="自動展開先のチャンネルのwebhookURL" required></br>
+            <input type="hidden" name="premium" value="0" required>
+            <input type="text" name="premium_code" id="premium_code" style="visibility: hidden;" value="" required></br>
+            <input type="submit" value="登録">
+        </form>
+    </div>
+    <script>
+        //getパラメーターを取得
+        function getParam() {
+            var url = location.href;
+            parameters = url.split("?");
+            params = parameters[1].split("&");
+            var paramsArray = [];
+            for ( i = 0; i < params.length; i++ ) {
+                neet = params[i].split("=");
+                paramsArray.push(neet[0]);
+                paramsArray[neet[0]] = neet[1];
+            }
+            return paramsArray;
+        }
+        //getパラメーターを取得
+        var param = getParam();
+        //getパラメーターにuseridがあるか確認
+        if(param["userid"] != null){
+            //useridを取得
+            var userid = param["userid"];
+            //useridをフォームに入力
+            document.getElementById('userid').value = userid;
+        } else {
+            //useridがない場合はエラーを表示
+            alert("useridが取得できませんでした。\n最初からやり直してください。");
+            document.location.href = "/";
+        }
+        //getパラメーターにpremiumがあるか確認
+        if(param["premium"] != null){
+            //premiumを取得
+            var premium = param["premium"];
+            //premiumをフォームに入力
+            document.getElementById('premium_code').value = premium;
+            //premium_codeを表示
+            document.getElementById('premium_code').style.visibility = "visible";
+        }
+    </script>
+</body>
+</html>
