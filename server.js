@@ -36,9 +36,9 @@ connection.connect((err) => {
 });
 
 const oauth = new DiscordOauth2({
-	clientId: "1161267455335862282",
-	clientSecret: "nHw4FFnrqVwQTLQ3tVh-vadvXTeS6vSk",
-	redirectUri: "https://autoextract.sprink.cloud/callback",
+    clientId: "1161267455335862282",
+    clientSecret: "nHw4FFnrqVwQTLQ3tVh-vadvXTeS6vSk",
+    redirectUri: "https://autoextract.sprink.cloud/callback",
     //redirectUri: "http://localhost:3040/callback",
 });
 
@@ -63,7 +63,7 @@ app.get('/callback', async (req, res) => {
     const user = await oauth.getUser(token.access_token);
     const guilds = await oauth.getUserGuilds(token.access_token);
 
-    if(new Date().getTime() / 1000 < deny_before_timestamp){
+    if (new Date().getTime() / 1000 < deny_before_timestamp) {
         res.send('条件を満たしていません。公式サーバーのアナウンスチャンネルを確認してください。');
         return;
     }
@@ -75,7 +75,7 @@ app.get('/callback', async (req, res) => {
         return;
     }
     //rssテーブルに同じuseridでpremium_flagが0のものがあるか確認
-    connection.query('SELECT * FROM rss WHERE userid = ? AND premium_flag = 0', [user.id], (err, result) => {
+    connection.query('SELECT * FROM rss WHERE userid = ? AND premium_flag = 0 username NOT NULL AND webhook NOT NULL', [user.id], (err, result) => {
         if (err) {
             console.error('Error executing query:', err);
             return;
@@ -94,7 +94,7 @@ app.get('/callback', async (req, res) => {
                 if (result.length > 0) {
                     res.redirect('https://autoextract.sprink.cloud/register?premium=1&userid=' + user.id);
                     return;
-                }else{
+                } else {
                     //もしpremium_flagが0のものがallowed_nonpremium_users_countより多ければ拒否
                     connection.query('SELECT * FROM rss WHERE premium_flag = 0', (err, result) => {
                         if (err) {
@@ -104,13 +104,26 @@ app.get('/callback', async (req, res) => {
                         if (result.length >= allowed_nonpremium_users_count) {
                             res.send('登録数が上限に達しています');
                             return;
-                        }else{
-                            connection.query('INSERT INTO rss (userid, created_at) VALUES (?, ?)', [user.id, new Date().getTime()], (err, result) => {
+                        } else {
+                            //もしusername IS NULL AND webhook IS NULLのものがあればリダイレクト
+                            connection.query('SELECT * FROM rss WHERE userid = ? AND username IS NULL AND webhook IS NULL', [user.id], (err, result) => {
                                 if (err) {
                                     console.error('Error executing query:', err);
                                     return;
                                 }
-                                res.redirect('https://autoextract.sprink.cloud/register?userid=' + user.id);
+                                if (result.length > 0) {
+                                    res.redirect('https://autoextract.sprink.cloud/register?userid=' + user.id);
+                                    return;
+                                } else {
+                                    //それ以外の場合は新規作成
+                                    connection.query('INSERT INTO rss (userid, created_at) VALUES (?, ?)', [user.id, new Date().getTime()], (err, result) => {
+                                        if (err) {
+                                            console.error('Error executing query:', err);
+                                            return;
+                                        }
+                                        res.redirect('https://autoextract.sprink.cloud/register?userid=' + user.id);
+                                    });
+                                }
                             });
                         }
                     });
