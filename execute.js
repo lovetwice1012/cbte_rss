@@ -15,6 +15,14 @@ process.on('unhandledRejection', function (err) {
     console.log(err);
 });
 
+//もし引数に--premiumがあれば、premium_flagが1のものだけを処理
+let premium_flag = 0;
+if (process.argv.includes('--premium')) {
+    premium_flag = 1;
+}
+
+console.log(premium_flag)
+
 async function execute() {
     return new Promise(async (resolve, reject) => {
         //RSSテーブルからデータを取得して変数rssに格納
@@ -26,6 +34,7 @@ async function execute() {
                 resolve();
             });
         });
+        if(premium_flag === 1) rss = rss.filter((item) => item.premium_flag === 1);
         //取得したデータを一つずつ処理
         for (let i = 0; i < rss.length; i++) {
             if(rss[i].webhook === null) continue;
