@@ -14,7 +14,7 @@ process.on('uncaughtException', function (err) {
 process.on('unhandledRejection', function (err) {
     console.log(err);
 });
-
+connection.connect(async (err) => {
 //sql.txtから文字列を取得して改行で分割
 let sql = fs.readFileSync('sql.txt', 'utf-8').split('\n');
 //取得した文字列を一つずつ実行
@@ -24,4 +24,5 @@ for (let i = 0; i < sql.length; i++)
     });
 
 connection.end();
+});
 
