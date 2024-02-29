@@ -1103,7 +1103,7 @@ async function execute() {
                         if(e === "rate limit exceeded"){
                             return reject(e);
                         }
-                        if(e.match(/fetch failed/)){
+                        if(e !== undefiend && e.match(/fetch failed/)){
                             console.log("wait 2 minutes to pass the rate limit(CONNREFUSED)")
                                 await new Promise((resolve, reject) => {
                                     setTimeout(() => {
