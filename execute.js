@@ -1,5 +1,6 @@
 const mysql = require('mysql');
 const xml2js = require('xml2js');
+const fetch = require('node-fetch');
 const connection = mysql.createConnection({
     host: 'localhost',
     user: 'comebacktwitterembed',
