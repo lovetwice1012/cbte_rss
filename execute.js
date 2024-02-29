@@ -82,6 +82,7 @@ async function execute() {
                     });
                 });
             } catch (e) {
+                console.log(xml);
                 console.log(e);
                 continue;
             }
