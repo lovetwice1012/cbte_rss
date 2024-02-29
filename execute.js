@@ -1086,6 +1086,7 @@ async function execute() {
                                 await new Promise((resolve, reject) => {
                                     connection.query('DELETE FROM rss WHERE id = ?', [rss[i].id], (err) => {
                                         if (err) reject(err);
+                                        console.log("deleted")
                                         reject();
                                     });
                                 });
