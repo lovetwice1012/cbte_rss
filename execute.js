@@ -1,6 +1,5 @@
 const mysql = require('mysql');
 const xml2js = require('xml2js');
-const fetch = require('node-fetch');
 const connection = mysql.createConnection({
     host: 'localhost',
     user: 'comebacktwitterembed',
@@ -57,7 +56,8 @@ async function execute() {
                             "sec-fetch-site": "same-origin",
                             "sec-fetch-user": "?1",
                             "sec-gpc": "1",
-                            "upgrade-insecure-requests": "1"
+                            "upgrade-insecure-requests": "1",
+                            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36" 
                         },
                         "referrerPolicy": "no-referrer",
                         "body": null,
