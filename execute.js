@@ -1099,7 +1099,7 @@ async function execute() {
                         console.log("done")
                     }).catch(async (e) => {
 
-                        console.error(e.code);
+                        console.error(JSON.stringify(JSON.parse(e)));
                         if(e === "rate limit exceeded"){
                             return reject(e);
                         }
