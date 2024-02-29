@@ -1099,11 +1099,11 @@ async function execute() {
                         console.log("done")
                     }).catch(async (e) => {
 
-                        console.error(JSON.stringify(JSON.parse(e)));
+                        console.error(e);
                         if(e === "rate limit exceeded"){
                             return reject(e);
                         }
-                        if(e.code === "ECONNREFUSED"){
+                        if(e.match(/fetch failed/)){
                             console.log("wait 2 minutes to pass the rate limit(CONNREFUSED)")
                                 await new Promise((resolve, reject) => {
                                     setTimeout(() => {
