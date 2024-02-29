@@ -68,7 +68,15 @@ async function execute() {
                         console.log(text)
                         if (res.status === 429){
                             console.log("rate limit exceeded")
-                            reject("rate limit exceeded")
+                            console.log("wait 15 seconds to pass the rate limit")
+                            await new Promise((resolve, reject) => {
+                                setTimeout(() => {
+                                    resolve();
+                                }
+                                , 15000);
+                            });
+                            i--;
+                            return reject("rate limit exceeded");
                         }
                         if(res.status === 404){
                             await new Promise((resolve, reject) => {
@@ -89,6 +97,9 @@ async function execute() {
                     }).catch((e) => {
 
                         console.error(e);
+                        if(e === "rate limit exceeded"){
+                            return reject(e);
+                        }
                         const https = require('https');
                         https.get(`https://nitter.sprink.cloud/${rss[i].username}/rss`, (res) => {
                             let data = '';
