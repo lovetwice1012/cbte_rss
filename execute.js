@@ -21,7 +21,6 @@ if (process.argv.includes('--premium')) {
     premium_flag = 1;
 }
 
-console.log(premium_flag)
 
 async function execute() {
     return new Promise(async (resolve, reject) => {
@@ -41,34 +40,28 @@ async function execute() {
             if (rss[i].username === null) continue;
             // "https://nitter.poast.org/{username}/rss" にアクセスして、XMLを取得するが、もし失敗したら　"https://nitter.sprink.cloud/{username}/rss" にアクセスして、XMLを取得
             let xml = {};
-            const options = {
-                protocol: 'https:',
-                hostname: 'nitter.poast.org',
-                port: 443,
-                path: `/${rss[i].username}/rss`,
-                headers: {
-                    'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
-                    'accept-language': 'ja;q=0.7',
-                    'cache-control': 'no-cache',
-                    'pragma': 'no-cache',
-                    'sec-ch-ua': '"Chromium";v="122", "Not(A:Brand";v="24", "Brave";v="122"',
-                    'sec-ch-ua-mobile': '?0',
-                    'sec-ch-ua-platform': '"Windows"',
-                    'sec-fetch-dest': 'document',
-                    'sec-fetch-mode': 'navigate',
-                    'sec-fetch-site': 'same-origin',
-                    'sec-fetch-user': '?1',
-                    'sec-gpc': '1',
-                    'upgrade-insecure-requests': '1'
-                },
-                referrerPolicy: 'no-referrer',
-                body: null,
-                method: 'GET'
-            }
             try {
                 xml = await new Promise((resolve, reject) => {
-                    const https = require('https');
-                    https.get(options, (res) => {
+                    fetch(`https://nitter.poast.org/${rss[i].username}/rss`, {
+                        "headers": {
+                            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+                            "accept-language": "ja;q=0.7",
+                            "cache-control": "no-cache",
+                            "pragma": "no-cache",
+                            "sec-ch-ua": "\"Chromium\";v=\"122\", \"Not(A:Brand\";v=\"24\", \"Brave\";v=\"122\"",
+                            "sec-ch-ua-mobile": "?0",
+                            "sec-ch-ua-platform": "\"Windows\"",
+                            "sec-fetch-dest": "document",
+                            "sec-fetch-mode": "navigate",
+                            "sec-fetch-site": "same-origin",
+                            "sec-fetch-user": "?1",
+                            "sec-gpc": "1",
+                            "upgrade-insecure-requests": "1"
+                        },
+                        "referrerPolicy": "no-referrer",
+                        "body": null,
+                        "method": "GET"
+                    }).then((res) => {
                         let data = '';
                         res.on('data', (chunk) => {
                             data += chunk;
@@ -76,8 +69,10 @@ async function execute() {
                         res.on('end', () => {
                             resolve(data);
                         });
-                    }).on('error', (e) => {
+                    }).catch((e) => {
+
                         console.error(e);
+                        reject(e);
                         https.get(`https://nitter.sprink.cloud/${rss[i].username}/rss`, (res) => {
                             let data = '';
                             res.on('data', (chunk) => {
@@ -91,7 +86,7 @@ async function execute() {
                             reject(e);
                         });
                     });
-                });
+                })
             } catch (e) {
                 console.log(e);
                 continue;
