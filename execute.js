@@ -1076,7 +1076,7 @@ async function execute() {
                                 setTimeout(() => {
                                     resolve();
                                 }
-                                , 5000);
+                                , 1000);
                             });
                             i--;
                             return reject("rate limit exceeded");
@@ -1093,7 +1093,7 @@ async function execute() {
                         await new Promise((resolve, reject) => {
                             setTimeout(() => {
                                 resolve();
-                            }, 5000);
+                            }, 1000);
                         });
                         resolve(text);
                         console.log("done")
