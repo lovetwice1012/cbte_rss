@@ -81,10 +81,10 @@ async function execute() {
                         console.log("wait 10 seconds to pass the rate limit")
                         await new Promise((resolve, reject) => {
                             setTimeout(() => {
-                                resolve(text);
+                                resolve();
                             }, 10000);
                         });
-                        resolve(await res.text());
+                        resolve(text);
                         console.log("done")
                     }).catch((e) => {
 
