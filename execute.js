@@ -66,7 +66,7 @@ async function execute() {
                         await new Promise((resolve, reject) => {
                             setTimeout(() => {
                                 resolve();
-                            }, 10000);
+                            }, 1000);
                         });
                         resolve(res.text());
                     }).catch((e) => {
