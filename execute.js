@@ -64,7 +64,8 @@ async function execute() {
                         "method": "GET"
                     }).then(async (res) => {
                         console.log(res.status)
-                        console.log(res.text())
+                        const text = await res.text()
+                        console.log(text)
                         if (res.status === 429){
                             console.log("rate limit exceeded")
                             reject("rate limit exceeded")
@@ -73,17 +74,17 @@ async function execute() {
                             await new Promise((resolve, reject) => {
                                 connection.query('DELETE FROM rss WHERE id = ?', [rss[i].id], (err) => {
                                     if (err) reject(err);
-                                    resolve();
+                                    reject();
                                 });
                             });
                         }
                         console.log("wait 10 seconds to pass the rate limit")
                         await new Promise((resolve, reject) => {
                             setTimeout(() => {
-                                resolve();
+                                resolve(text);
                             }, 10000);
                         });
-                        resolve(res.text());
+                        resolve(await res.text());
                         console.log("done")
                     }).catch((e) => {
 
