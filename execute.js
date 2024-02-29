@@ -63,11 +63,25 @@ async function execute() {
                         "body": null,
                         "method": "GET"
                     }).then(async (res) => {
-                        console.log("wait 5 seconds to pass the rate limit")
+                        console.log(res.status)
+                        console.log(res.text())
+                        if (res.status === 429){
+                            console.log("rate limit exceeded")
+                            reject("rate limit exceeded")
+                        }
+                        if(res.status === 404){
+                            await new Promise((resolve, reject) => {
+                                connection.query('DELETE FROM rss WHERE id = ?', [rss[i].id], (err) => {
+                                    if (err) reject(err);
+                                    resolve();
+                                });
+                            });
+                        }
+                        console.log("wait 10 seconds to pass the rate limit")
                         await new Promise((resolve, reject) => {
                             setTimeout(() => {
                                 resolve();
-                            }, 5000);
+                            }, 10000);
                         });
                         resolve(res.text());
                         console.log("done")
@@ -110,7 +124,7 @@ async function execute() {
 
             //pubDateをunixtimestampに変換したものがlastextractedより新しいものだけを取得
             let newItems = [];
-            console.log(parsed);
+            if(parsed?.rss?.channel[0]?.item === undefined || parsed?.rss?.channel[0]?.item === null) continue;
             for (let j = 0; j < parsed.rss.channel[0].item.length; j++) {
                 let pubDate = new Date(parsed.rss.channel[0].item[j].pubDate).getTime();
                 if (pubDate > rss[i].lastextracted) {
@@ -166,8 +180,16 @@ async function execute() {
                         process.stdout.write(d);
                     });
                 });
-                req.on('error', (error) => {
+                req.on('error', async (error) => {
                     console.error(error);
+                    if(req.statusCode === 404){
+                        await new Promise((resolve, reject) => {
+                            connection.query('DELETE FROM rss WHERE id = ?', [rss[i].id], (err) => {
+                                if (err) reject(err);
+                                resolve();
+                            });
+                        });
+                    }
                 });
                 req.write(data);
                 req.end();
