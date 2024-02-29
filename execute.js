@@ -63,13 +63,14 @@ async function execute() {
                         "body": null,
                         "method": "GET"
                     }).then(async (res) => {
+                        console.log("wait 5 seconds to pass the rate limit")
                         await new Promise((resolve, reject) => {
                             setTimeout(() => {
                                 resolve();
-                            }, 1000);
+                            }, 5000);
                         });
                         resolve(res.text());
-                        console.log("Fetched from nitter.poast.org/{username}/rss");
+                        console.log("done")
                     }).catch((e) => {
 
                         console.error(e);
