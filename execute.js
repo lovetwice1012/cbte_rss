@@ -42,6 +42,10 @@ async function execute() {
             // "https://nitter.poast.org/{username}/rss" にアクセスして、XMLを取得するが、もし失敗したら　"https://nitter.sprink.cloud/{username}/rss" にアクセスして、XMLを取得
             let xml = {};
             const options = {
+                protocol: 'https:',
+                hostname: 'nitter.poast.org',
+                port: 443,
+                path: `/${rss[i].username}/rss`,
                 headers: {
                     'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
                     'accept-language': 'ja;q=0.7',
@@ -64,7 +68,7 @@ async function execute() {
             try {
                 xml = await new Promise((resolve, reject) => {
                     const https = require('https');
-                    https.get(`https://nitter.poast.org/${rss[i].username}/rss`, options, (res) => {
+                    https.get(options, (res) => {
                         let data = '';
                         res.on('data', (chunk) => {
                             data += chunk;
@@ -74,7 +78,7 @@ async function execute() {
                         });
                     }).on('error', (e) => {
                         console.error(e);
-                        https.get(`https://nitter.sprink.cloud/${rss[i].username}/rss`, options, (res) => {
+                        https.get(`https://nitter.sprink.cloud/${rss[i].username}/rss`, (res) => {
                             let data = '';
                             res.on('data', (chunk) => {
                                 data += chunk;
