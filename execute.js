@@ -62,12 +62,17 @@ async function execute() {
                         "referrerPolicy": "no-referrer",
                         "body": null,
                         "method": "GET"
-                    }).then((res) => {
+                    }).then(async (res) => {
+                        await new Promise((resolve, reject) => {
+                            setTimeout(() => {
+                                resolve();
+                            }, 10000);
+                        });
                         resolve(res.text());
                     }).catch((e) => {
 
                         console.error(e);
-                        reject(e);
+                        const https = require('https');
                         https.get(`https://nitter.sprink.cloud/${rss[i].username}/rss`, (res) => {
                             let data = '';
                             res.on('data', (chunk) => {
