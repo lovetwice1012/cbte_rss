@@ -22,6 +22,57 @@ if (process.argv.includes('--premium')) {
 }
 
 
+const webProxyURLList = [
+    "https://us1.proxysite.com/includes/process.php?action=update",
+    "https://us2.proxysite.com/includes/process.php?action=update",
+    "https://us3.proxysite.com/includes/process.php?action=update",
+    "https://us4.proxysite.com/includes/process.php?action=update",
+    "https://us5.proxysite.com/includes/process.php?action=update",
+    "https://us6.proxysite.com/includes/process.php?action=update",
+    "https://us7.proxysite.com/includes/process.php?action=update",
+    "https://us8.proxysite.com/includes/process.php?action=update",
+    "https://us9.proxysite.com/includes/process.php?action=update",
+    "https://us10.proxysite.com/includes/process.php?action=update",
+    "https://us11.proxysite.com/includes/process.php?action=update",
+    "https://us12.proxysite.com/includes/process.php?action=update",
+    "https://us13.proxysite.com/includes/process.php?action=update",
+    "https://us14.proxysite.com/includes/process.php?action=update",
+    "https://us15.proxysite.com/includes/process.php?action=update",
+    "https://us16.proxysite.com/includes/process.php?action=update",
+    "https://us17.proxysite.com/includes/process.php?action=update",
+    "https://us18.proxysite.com/includes/process.php?action=update",
+    "https://us19.proxysite.com/includes/process.php?action=update",
+    "https://us20.proxysite.com/includes/process.php?action=update"
+];
+
+/* proxy request example
+
+fetch(webwebProxyURLList[i % webProxyURLList.length], {
+    "headers": {
+    "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*\/*;q=0.8",
+    "accept-language": "ja;q=0.8",
+    "cache-control": "no-cache",
+    "content-type": "application/x-www-form-urlencoded",
+    "pragma": "no-cache",
+    "sec-ch-ua": "\"Chromium\";v=\"122\", \"Not(A:Brand\";v=\"24\", \"Brave\";v=\"122\"",
+    "sec-ch-ua-mobile": "?0",
+    "sec-ch-ua-platform": "\"Windows\"",
+    "sec-fetch-dest": "document",
+    "sec-fetch-mode": "navigate",
+    "sec-fetch-site": "same-site",
+    "sec-fetch-user": "?1",
+    "sec-gpc": "1",
+    "upgrade-insecure-requests": "1",
+    "cookie": "PHPSESSID=77jr1evi3epoi7u7nqpculf5l6",
+    "Referer": "https://www.proxysite.com/",
+    "Referrer-Policy": "strict-origin-when-cross-origin"
+    },
+    "body": encodeURIComponent(`server-option=${webwebProxyURLList[i % webProxyURLList.length].split("/")[2].split(".")[0]}&d=https%3A%2F%2Fnitter.poast.org%2F${rss[i].username}%2Frss&allowCookies=on`),
+    "method": "POST"
+});
+
+*/
+
 async function execute() {
     return new Promise(async (resolve, reject) => {
         //RSSテーブルからデータを取得して変数rssに格納
@@ -42,26 +93,28 @@ async function execute() {
             let xml = {};
             try {
                 xml = await new Promise((resolve, reject) => {
-                    fetch(`https://nitter.poast.org/${rss[i].username}/rss`, {
+                    fetch(webwebProxyURLList[i % webProxyURLList.length], {
                         "headers": {
-                            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
-                            "accept-language": "ja;q=0.7",
-                            "cache-control": "no-cache",
-                            "pragma": "no-cache",
-                            "sec-ch-ua": "\"Chromium\";v=\"122\", \"Not(A:Brand\";v=\"24\", \"Brave\";v=\"122\"",
-                            "sec-ch-ua-mobile": "?0",
-                            "sec-ch-ua-platform": "\"Windows\"",
-                            "sec-fetch-dest": "document",
-                            "sec-fetch-mode": "navigate",
-                            "sec-fetch-site": "same-origin",
-                            "sec-fetch-user": "?1",
-                            "sec-gpc": "1",
-                            "upgrade-insecure-requests": "1",
-                            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.110 Safari/537.36" 
+                        "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*\/*;q=0.8",
+                        "accept-language": "ja;q=0.8",
+                        "cache-control": "no-cache",
+                        "content-type": "application/x-www-form-urlencoded",
+                        "pragma": "no-cache",
+                        "sec-ch-ua": "\"Chromium\";v=\"122\", \"Not(A:Brand\";v=\"24\", \"Brave\";v=\"122\"",
+                        "sec-ch-ua-mobile": "?0",
+                        "sec-ch-ua-platform": "\"Windows\"",
+                        "sec-fetch-dest": "document",
+                        "sec-fetch-mode": "navigate",
+                        "sec-fetch-site": "same-site",
+                        "sec-fetch-user": "?1",
+                        "sec-gpc": "1",
+                        "upgrade-insecure-requests": "1",
+                        "cookie": "PHPSESSID=77jr1evi3epoi7u7nqpculf5l6",
+                        "Referer": "https://www.proxysite.com/",
+                        "Referrer-Policy": "strict-origin-when-cross-origin"
                         },
-                        "referrerPolicy": "no-referrer",
-                        "body": null,
-                        "method": "GET"
+                        "body": encodeURIComponent(`server-option=${webwebProxyURLList[i % webProxyURLList.length].split("/")[2].split(".")[0]}&d=https%3A%2F%2Fnitter.poast.org%2F${rss[i].username}%2Frss&allowCookies=on`),
+                        "method": "POST"
                     }).then(async (res) => {
                         console.log(res.status)
                         const text = await res.text()
