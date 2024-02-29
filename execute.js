@@ -63,13 +63,7 @@ async function execute() {
                         "body": null,
                         "method": "GET"
                     }).then((res) => {
-                        let data = '';
-                        res.on('data', (chunk) => {
-                            data += chunk;
-                        });
-                        res.on('end', () => {
-                            resolve(data);
-                        });
+                        resolve(res.text());
                     }).catch((e) => {
 
                         console.error(e);
