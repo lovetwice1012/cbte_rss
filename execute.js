@@ -1195,12 +1195,12 @@ async function execute() {
             if (linksString.length > 2000) {
                 let linksArray = linksString.split('\n');
                 let string = '';
-                for (let j = 0; j < linksArray.length; j++) {
-                    if (string.length + linksArray[j].length > 2000) {
+                for (let j = 1; j <= linksArray.length; j++) {
+                    if (string.length + linksArray[linksArray.length - j].length > 2000) {
                         stringsArray.push(string);
-                        string = linksArray[j];
+                        string = linksArray[linksArray.length - j];
                     } else {
-                        string += '\n' + linksArray[j];
+                        string += '\n' + linksArray[linksArray.length - j];
                     }
                 }
                 stringsArray.push(string);
