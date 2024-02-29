@@ -1099,11 +1099,11 @@ async function execute() {
                         console.log("done")
                     }).catch(async (e) => {
 
-                        console.error(e);
+                        console.error(e.code);
                         if(e === "rate limit exceeded"){
                             return reject(e);
                         }
-                        if(e.message.match(/ECONNREFUSED/)){
+                        if(e.code === "ECONNREFUSED"){
                             console.log("wait 2 minutes to pass the rate limit(CONNREFUSED)")
                                 await new Promise((resolve, reject) => {
                                     setTimeout(() => {
