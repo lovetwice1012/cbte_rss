@@ -1120,7 +1120,7 @@ async function execute() {
                 })
             } catch (e) {
                 console.log(e);
-                if(e.code === "ECONNREFUSED"){
+                if(e.match(/ECONNREFUSED/)){
                 console.log("wait 2 minutes to pass the rate limit(CONNREFUSED)")
                     await new Promise((resolve, reject) => {
                         setTimeout(() => {
