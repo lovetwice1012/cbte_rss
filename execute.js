@@ -39,18 +39,32 @@ async function execute() {
         for (let i = 0; i < rss.length; i++) {
             if(rss[i].webhook === null) continue;
             if(rss[i].username === null) continue;
-            // "https://nitter.sprink.cloud/{username}/rss" にアクセスして、XMLを取得
+            // "https://nitter.poast.org/{username}/rss" にアクセスして、XMLを取得するが、もし失敗したら　"https://nitter.sprink.cloud/{username}/rss" にアクセスして、XMLを取得
             let xml = {};
             try {
                 xml = await new Promise((resolve, reject) => {
                     const https = require('https');
-                    https.get(`https://nitter.sprink.cloud/${rss[i].username}/rss`, (res) => {
+                    https.get(`https://nitter.poast.org/${rss[i].username}/rss`, (res) => {
                         let data = '';
                         res.on('data', (chunk) => {
                             data += chunk;
                         });
                         res.on('end', () => {
                             resolve(data);
+                        });
+                    }).on('error', (e) => {
+                        console.error(e);
+                        https.get(`https://nitter.sprink.cloud/${rss[i].username}/rss`, (res) => {
+                            let data = '';
+                            res.on('data', (chunk) => {
+                                data += chunk;
+                            });
+                            res.on('end', () => {
+                                resolve(data);
+                            });
+                        }).on('error', (e) => {
+                            console.error(e);
+                            reject(e);
                         });
                     });
                 });
