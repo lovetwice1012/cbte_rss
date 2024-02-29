@@ -100,6 +100,10 @@ async function execute() {
                         if(e === "rate limit exceeded"){
                             return reject(e);
                         }
+                        //if connection refused kill the process
+                        if(e.code === "ECONNREFUSED"){
+                            process.exit(0);
+                        }
                         const https = require('https');
                         https.get(`https://nitter.sprink.cloud/${rss[i].username}/rss`, (res) => {
                             let data = '';
