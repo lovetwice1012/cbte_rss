@@ -1223,15 +1223,9 @@ async function execute() {
                         'Content-Length': data.length
                     }
                 };
-                const req = https.request(options, (res) => {
+                const req = https.request(options, async (res) => {
                     console.log(`statusCode: ${res.statusCode}`);
-                    res.on('data', (d) => {
-                        process.stdout.write(d);
-                    });
-                });
-                req.on('error', async (error) => {
-                    console.error(error);
-                    if (req.statusCode === 404) {
+                    if (res.statusCode === 404) {
                         await new Promise((resolve, reject) => {
                             connection.query('DELETE FROM rss WHERE id = ?', [rss[i].id], (err) => {
                                 if (err) reject(err);
@@ -1239,6 +1233,13 @@ async function execute() {
                             });
                         });
                     }
+                    res.on('data', (d) => {
+                        process.stdout.write(d);
+                    });
+                });
+                req.on('error', async (error) => {
+                    console.error(error);
+                    
                 });
                 req.write(data);
                 req.end();
