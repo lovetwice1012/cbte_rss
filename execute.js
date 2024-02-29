@@ -1076,7 +1076,7 @@ async function execute() {
                                 setTimeout(() => {
                                     resolve();
                                 }
-                                , 1000);
+                                , 15000);
                             });
                             i--;
                             return reject("rate limit exceeded");
@@ -1093,7 +1093,7 @@ async function execute() {
                         await new Promise((resolve, reject) => {
                             setTimeout(() => {
                                 resolve();
-                            }, 1000);
+                            }, 10000);
                         });
                         resolve(text);
                         console.log("done")
@@ -1102,10 +1102,6 @@ async function execute() {
                         console.error(e);
                         if(e === "rate limit exceeded"){
                             return reject(e);
-                        }
-                        //if connection refused kill the process
-                        if(e.code === "ECONNREFUSED"){
-                            process.exit(0);
                         }
                         const https = require('https');
                         https.get(`https://nitter.sprink.cloud/${rss[i].username}/rss`, (res) => {
@@ -1124,6 +1120,16 @@ async function execute() {
                 })
             } catch (e) {
                 console.log(e);
+                if(e.code === "ECONNREFUSED"){
+                console.log("wait 2 minutes to pass the rate limit(CONNREFUSED)")
+                    await new Promise((resolve, reject) => {
+                        setTimeout(() => {
+                            resolve();
+                        }
+                        , 120000);
+                    });
+                    i--;
+                }
                 continue;
             }
             //XMLをパース
