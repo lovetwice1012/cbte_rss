@@ -1097,12 +1097,24 @@ async function execute() {
                         });
                         resolve(text);
                         console.log("done")
-                    }).catch((e) => {
+                    }).catch(async (e) => {
 
                         console.error(e);
                         if(e === "rate limit exceeded"){
                             return reject(e);
                         }
+                        if(e.match(/ECONNREFUSED/)){
+                            console.log("wait 2 minutes to pass the rate limit(CONNREFUSED)")
+                                await new Promise((resolve, reject) => {
+                                    setTimeout(() => {
+                                        resolve();
+                                    }
+                                    , 120000);
+                                });
+                                i--;
+                        return reject(e);
+                        }
+
                         const https = require('https');
                         https.get(`https://nitter.sprink.cloud/${rss[i].username}/rss`, (res) => {
                             let data = '';
