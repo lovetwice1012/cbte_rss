@@ -47,7 +47,7 @@ const webProxyURLList = [
 
 /* proxy request example
 
-fetch(webwebProxyURLList[i % webProxyURLList.length], {
+fetch(webProxyURLList[i % webProxyURLList.length], {
     "headers": {
     "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*\/*;q=0.8",
     "accept-language": "ja;q=0.8",
@@ -93,7 +93,7 @@ async function execute() {
             let xml = {};
             try {
                 xml = await new Promise((resolve, reject) => {
-                    fetch(webwebProxyURLList[i % webProxyURLList.length], {
+                    fetch(webProxyURLList[i % webProxyURLList.length], {
                         "headers": {
                         "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*\/*;q=0.8",
                         "accept-language": "ja;q=0.8",
@@ -113,7 +113,7 @@ async function execute() {
                         "Referer": "https://www.proxysite.com/",
                         "Referrer-Policy": "strict-origin-when-cross-origin"
                         },
-                        "body": encodeURIComponent(`server-option=${webwebProxyURLList[i % webProxyURLList.length].split("/")[2].split(".")[0]}&d=https%3A%2F%2Fnitter.poast.org%2F${rss[i].username}%2Frss&allowCookies=on`),
+                        "body": encodeURIComponent(`server-option=${webProxyURLList[i % webProxyURLList.length].split("/")[2].split(".")[0]}&d=https%3A%2F%2Fnitter.poast.org%2F${rss[i].username}%2Frss&allowCookies=on`),
                         "method": "POST"
                     }).then(async (res) => {
                         console.log(res.status)
