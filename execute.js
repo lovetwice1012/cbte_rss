@@ -109,6 +109,7 @@ async function execute() {
 
             //pubDateをunixtimestampに変換したものがlastextractedより新しいものだけを取得
             let newItems = [];
+            console.log(parsed);
             for (let j = 0; j < parsed.rss.channel[0].item.length; j++) {
                 let pubDate = new Date(parsed.rss.channel[0].item[j].pubDate).getTime();
                 if (pubDate > rss[i].lastextracted) {
