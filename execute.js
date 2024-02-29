@@ -69,6 +69,7 @@ async function execute() {
                             }, 1000);
                         });
                         resolve(res.text());
+                        console.log("Fetched from nitter.poast.org/{username}/rss");
                     }).catch((e) => {
 
                         console.error(e);
