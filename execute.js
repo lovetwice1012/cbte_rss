@@ -1041,7 +1041,6 @@ async function execute() {
         for (let i = 0; i < rss.length; i++) {
             if (rss[i].webhook === null) continue;
             if (rss[i].username === null) continue;
-            // "https://nitter.poast.org/{username}/rss" にアクセスして、XMLを取得するが、もし失敗したら　"https://nitter.sprink.cloud/{username}/rss" にアクセスして、XMLを取得
             let xml = {};
             try {
                 xml = await new Promise((resolve, reject) => {
@@ -1129,7 +1128,10 @@ async function execute() {
                                     await new Promise((resolve, reject) => {
                                         connection.query('DELETE FROM rss WHERE id = ?', [rss[i].id], (err) => {
                                             if (err) reject(err);
-                                            reject();
+                                            connection.query('INSERT INTO deregister_notification (userid, reasonId) VALUES (?, ?)', [rss[i].userid, 1], (err) => {
+                                                if (err) reject(err);
+                                                resolve();
+                                            });
                                         });
                                     });
                                 }
@@ -1230,7 +1232,10 @@ async function execute() {
                         await new Promise((resolve, reject) => {
                             connection.query('DELETE FROM rss WHERE id = ?', [rss[i].id], (err) => {
                                 if (err) reject(err);
-                                resolve();
+                                connection.query('INSERT INTO deregister_notification (userid, reasonId) VALUES (?, ?)', [rss[i].userid, 2], (err) => {
+                                    if (err) reject(err);
+                                    resolve();
+                                });
                             });
                         });
                     }
@@ -1262,4 +1267,3 @@ connection.connect(async (err) => {
     await execute();
     connection.end();
 });
-
