@@ -1230,7 +1230,7 @@ async function execute() {
                 };
                 const req = https.request(options, async (res) => {
                     console.log(`statusCode: ${res.statusCode}`);
-                    if (res.statusCode === 404) {
+                    if (res.statusCode === 404 || res.statusCode === 401) {
                         await new Promise((resolve, reject) => {
                             connection.query('DELETE FROM rss WHERE id = ?', [rss[i].id], (err) => {
                                 if (err) reject(err);
