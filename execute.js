@@ -1085,6 +1085,7 @@ async function execute() {
                                 await new Promise((resolve, reject) => {
                                     connection.query('DELETE FROM rss WHERE id = ?', [rss[i].id], (err) => {
                                         if (err) reject(err);
+                                        return resolve();
                                         connection.query('INSERT INTO deregister_notification (userid, rssId, reasonId) VALUES (?, ?, ?)', [rss[i].userid, rss[i].id, 1], (err) => {
                                             if (err) reject(err);
                                             resolve();
@@ -1130,7 +1131,6 @@ async function execute() {
                                     await new Promise((resolve, reject) => {
                                         connection.query('DELETE FROM rss WHERE id = ?', [rss[i].id], (err) => {
                                             if (err) reject(err);
-                                            return resolve();
                                             connection.query('INSERT INTO deregister_notification (userid, rssId, reasonId) VALUES (?, ?, ?)', [rss[i].userid, rss[i].id, 1], (err) => {
                                                 if (err) reject(err);
                                                 resolve();
