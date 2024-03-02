@@ -1267,5 +1267,7 @@ connection.connect(async (err) => {
     if (err) throw err;
     console.log('Connected!');
     await execute();
-    connection.end();
+    setTimeout(() => {
+        connection.end();
+    }, 10000);
 });
