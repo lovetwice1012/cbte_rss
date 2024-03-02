@@ -1050,6 +1050,10 @@ async function execute() {
                             while (attempt < maxRetries) {
                                 try {
                                     const result = await fetchRss(username, userId, rssId);
+                                    // 成功時に10秒待機して結果を返す
+                                    console.log("Success. Waiting 10 seconds before returning result...");
+                                    await delay(10000); // 10秒待機
+                                    console.log("Returning result.");
                                     return result; // 成功時に結果を返す
                                 } catch (error) {
                                     console.error(`Attempt ${attempt + 1} failed: ${error.message}`);
