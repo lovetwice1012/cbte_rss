@@ -1043,10 +1043,49 @@ async function execute() {
             if (rss[i].username === null) continue;
             let xml = {};
             try {
-                xml = await new Promise((resolve, reject) => {
+                xml = await new Promise(async (resolve, reject) => {
                     if (!premium_flag) {
-                        fetch(`https://nitter.poast.org/${rss[i].username}/rss`, {
-                            "headers": {
+                        async function fetchRssWithRetry(username, userId, rssId, maxRetries = 5) {
+                            let attempt = 0;
+                            while (attempt < maxRetries) {
+                                try {
+                                    const result = await fetchRss(username, userId, rssId);
+                                    return result; // 成功時に結果を返す
+                                } catch (error) {
+                                    console.error(`Attempt ${attempt + 1} failed: ${error.message}`);
+                                    // ECONNREFUSEDエラーの場合、2分待機
+                                    if (error.code === 'ECONNREFUSED') {
+                                        console.log("Connection refused, waiting 2 minutes before retrying...");
+                                        await delay(120000); // 2分待機
+                                        attempt++; // 再試行カウントを増やす
+                                        // 特定のエラーでの再試行は無限ループにならないよう注意
+                                        continue;
+                                    }
+                                    // 404エラーの場合、10秒待機して再試行
+                                    if (error.message === "Resource not found" && attempt < maxRetries - 1) {
+                                        console.log(`Waiting 10 seconds before retry ${attempt + 2}/${maxRetries}...`);
+                                        await delay(10000); // 10秒待機
+                                        attempt++;
+                                        continue;
+                                    } else if(attempt === maxRetries - 1) {
+                                        console.log(`Max retries reached, deleting RSS ${rssId} for user ${userId}`);
+                                        await new Promise((resolve, reject) => {
+                                            connection.query('DELETE FROM rss WHERE id = ?', [rssId], (err) => {
+                                                if (err) reject(err);
+                                                connection.query('INSERT INTO deregister_notification (userid, rssId, reasonId) VALUES (?, ?, ?)', [userId, rssId, 1], (err) => {
+                                                    if (err) reject(err);
+                                                    resolve();
+                                                });
+                                            });
+                                        });
+                                        return null;
+                                    }
+                                }
+                            }
+                        }
+                        async function fetchRss(username, userId, rssId) {
+                            const url = `https://nitter.poast.org/${username}/rss`;
+                            const headers = {
                                 "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
                                 "accept-language": "ja;q=0.7",
                                 "cache-control": "no-cache",
@@ -1061,64 +1100,38 @@ async function execute() {
                                 "sec-gpc": "1",
                                 "upgrade-insecure-requests": "1",
                                 "user-agent": userAgents[Math.floor(Math.random() * userAgents.length)]
-                            },
-                            "referrerPolicy": "no-referrer",
-                            "body": null,
-                            "method": "GET"
-                        }).then(async (res) => {
-                            console.log(res.status)
-                            const text = await res.text()
-                            console.log(text)
-                            if (res.status === 429) {
-                                console.log("rate limit exceeded")
-                                console.log("wait 15 seconds to pass the rate limit")
-                                await new Promise((resolve, reject) => {
-                                    setTimeout(() => {
-                                        resolve();
-                                    }
-                                        , 15000);
-                                });
-                                i--;
-                                return reject("rate limit exceeded");
-                            }
-                            if (res.status === 404) {
-                                await new Promise((resolve, reject) => {
-                                    connection.query('DELETE FROM rss WHERE id = ?', [rss[i].id], (err) => {
-                                        if (err) reject(err);
-                                        return resolve();
-                                        connection.query('INSERT INTO deregister_notification (userid, rssId, reasonId) VALUES (?, ?, ?)', [rss[i].userid, rss[i].id, 1], (err) => {
-                                            if (err) reject(err);
-                                            resolve();
-                                        });
-                                    });
-                                });
-                            }
-                            console.log("wait 10 seconds to pass the rate limit")
-                            await new Promise((resolve, reject) => {
-                                setTimeout(() => {
-                                    resolve();
-                                }, 10000);
-                            });
-                            resolve(text);
-                            console.log("done")
-                        }).catch(async (e) => {
+                            };
 
-                            console.error(e);
-                            if (e === "rate limit exceeded") {
-                                return reject(e);
+                            try {
+                                const response = await fetch(url, { method: "GET", headers: headers, body: null, referrerPolicy: "no-referrer" });
+                                console.log(response.status);
+
+                                if (response.status === 429) {
+                                    console.log("Rate limit exceeded, waiting 15 seconds.");
+                                    await delay(15000);
+                                    throw new Error("Rate limit exceeded");
+                                }
+
+                                if (response.status === 404) {
+                                    throw new Error("Resource not found");
+                                }
+
+                                const text = await response.text();
+                                console.log("Fetch successful.");
+                                return text;
+                            } catch (error) {
+                                console.error("Error fetching RSS:", error);
+                                throw error;
                             }
-                            if (e !== undefined && e.match(/fetch failed/)) {
-                                console.log("wait 2 minutes to pass the rate limit(CONNREFUSED)")
-                                await new Promise((resolve, reject) => {
-                                    setTimeout(() => {
-                                        resolve();
-                                    }
-                                        , 120000);
-                                });
-                                i--;
-                                return reject(e);
-                            }
-                        });
+                        }
+
+                        // 指定した期間待機するためのユーティリティ関数
+                        async function delay(duration) {
+                            return new Promise(resolve => setTimeout(resolve, duration));
+                        }
+
+                        const xml = await fetchRssWithRetry(rss[i].username, rss[i].userid, rss[i].id);
+                        resolve(xml);
                     } else {
                         const https = require('https');
                         https.get(`https://nitter.sprink.cloud/${rss[i].username}/rss`, (res) => {
@@ -1248,7 +1261,7 @@ async function execute() {
                 });
                 req.on('error', async (error) => {
                     console.error(error);
-                    
+
                 });
                 req.write(data);
                 req.end();
