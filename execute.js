@@ -1071,7 +1071,7 @@ async function execute() {
                                         await delay(10000); // 10秒待機
                                         attempt++;
                                         continue;
-                                    } else if(attempt === maxRetries - 1) {
+                                    } else if (attempt === maxRetries - 1) {
                                         console.log(`Max retries reached, deleting RSS ${rssId} for user ${userId}`);
                                         await new Promise((resolve, reject) => {
                                             connection.query('DELETE FROM rss WHERE id = ?', [rssId], (err) => {
@@ -1210,73 +1210,64 @@ async function execute() {
                 return item.link[0].replace('nitter.poast.org', 'twitter.com');
             });
 
-            //linksを改行で結合
-            const linksString = links.join('\n');
-            //linksStringが2000文字以上なら分割
-            let linksArray = [];
-            let stringsArray = [];
-            if (linksString.length > 2000) {
-                let linksArray = linksString.split('\n');
-                let string = '';
-                for (let j = 1; j <= linksArray.length; j++) {
-                    if (string.length + linksArray[linksArray.length - j].length > 2000) {
-                        stringsArray.push(string);
-                        string = linksArray[linksArray.length - j];
-                    } else {
-                        string += '\n' + linksArray[linksArray.length - j];
+            async function sendWebhookMessage(stringsArray, webhookUrl, rssId, userId) {
+                for (let content of stringsArray) {
+                    const data = { content };
+
+                    try {
+                        const response = await fetch(webhookUrl, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(data)
+                        });
+
+                        console.log(`statusCode: ${response.status}`);
+
+                        if (response.status === 404 || response.status === 401) {
+                            await handleWebhookError(rssId, userId);
+                        } else {
+                            const responseBody = await response.text();
+                            console.log(responseBody);
+                        }
+                    } catch (error) {
+                        console.error("Error handling webhook request: ", error);
+                        break; // If there's an error, stop processing.
                     }
                 }
-                stringsArray.push(string);
-            } else {
-                stringsArray.push(linksString);
             }
-            //stringsArrayの中身をwebhookでそれぞれのチャンネルに送信
-            for (let j = 0; j < stringsArray.length; j++) {
-                const https = require('https');
-                const data = JSON.stringify({
-                    content: stringsArray[j]
-                });
-                const options = {
-                    hostname: 'discord.com',
-                    port: 443,
-                    path: rss[i].webhook.split('discord.com')[1],
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Content-Length': data.length
-                    }
-                };
-                const req = https.request(options, async (res) => {
-                    console.log(`statusCode: ${res.statusCode}`);
-                    if (res.statusCode === 404 || res.statusCode === 401) {
-                        await new Promise((resolve, reject) => {
-                            connection.query('DELETE FROM rss WHERE id = ?', [rss[i].id], (err) => {
-                                if (err) reject(err);
-                                connection.query('INSERT INTO deregister_notification (userid, rssId, reasonId) VALUES (?, ?, ?)', [rss[i].userid, rss[i].id, 2], (err) => {
-                                    if (err) reject(err);
-                                    resolve();
-                                });
-                            });
-                        });
-                    }
-                    res.on('data', (d) => {
-                        process.stdout.write(d);
+
+            async function handleWebhookError(rssId, userId) {
+                // RSS項目を削除
+                await new Promise((resolve, reject) => {
+                    connection.query('DELETE FROM rss WHERE id = ?', [rssId], (err) => {
+                        if (err) return reject(err);
+                        resolve();
                     });
                 });
-                req.on('error', async (error) => {
-                    console.error(error);
 
+                // 削除した理由を登録（404または401でも理由IDは2）
+                const reasonId = 2; // 理由IDを2として設定
+                await new Promise((resolve, reject) => {
+                    connection.query('INSERT INTO deregister_notification (userid, rssId, reasonId) VALUES (?, ?, ?)', [userId, rssId, reasonId], (err) => {
+                        if (err) return reject(err);
+                        resolve();
+                    });
                 });
-                req.write(data);
-                req.end();
             }
-            //最後にlastextractedを更新
-            await new Promise((resolve, reject) => {
-                connection.query('UPDATE rss SET lastextracted = ? WHERE id = ? AND username = ? AND webhook = ?', [Date.now(), rss[i].id, rss[i].username, rss[i].webhook], (err) => {
-                    if (err) reject(err);
-                    resolve();
+
+            async function updateLastExtracted(id, username, webhook) {
+                // lastextractedを更新するロジック
+                return new Promise((resolve, reject) => {
+                    connection.query('UPDATE rss SET lastextracted = ? WHERE id = ? AND username = ? AND webhook = ?', [Date.now(), id, username, webhook], (err) => {
+                        if (err) reject(err);
+                        resolve();
+                    });
                 });
-            });
+            }
+            //webhookを送信
+            await sendWebhookMessage(links, rss[i].webhook, rss[i].id, rss[i].userid);
         }
         resolve();
     });
