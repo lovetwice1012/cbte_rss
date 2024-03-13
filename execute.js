@@ -1045,7 +1045,7 @@ async function execute() {
             try {
                 xml = await new Promise(async (resolve, reject) => {
                     if (!premium_flag) {
-                        async function fetchRssWithRetry(username, userId, rssId, maxRetries = 5) {
+                        async function fetchRssWithRetry(username, userId, rssId, maxRetries = 10) {
                             let attempt = 0;
                             while (attempt < maxRetries) {
                                 try {
@@ -1078,7 +1078,7 @@ async function execute() {
                                                 if (err) reject(err);
                                                 connection.query('INSERT INTO deregister_notification (userid, rssId, reasonId) VALUES (?, ?, ?)', [userId, rssId, 1], (err) => {
                                                     if (err) reject(err);
-                                                    resolve();
+                                                    reject();
                                                 });
                                             });
                                         });
