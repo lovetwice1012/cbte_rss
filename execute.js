@@ -1229,6 +1229,7 @@ async function execute() {
                             await handleWebhookError(rssId, userId);
                         } else {
                             const responseBody = await response.text();
+                            updateLastExtracted(rssId, rss[i].username, rss[i].webhook);
                             console.log(responseBody);
                         }
                     } catch (error) {
