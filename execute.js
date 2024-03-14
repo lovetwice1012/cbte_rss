@@ -1078,7 +1078,7 @@ async function execute() {
                                                 if (err) reject(err);
                                                 connection.query('INSERT INTO deregister_notification (userid, rssId, reasonId) VALUES (?, ?, ?)', [userId, rssId, 1], (err) => {
                                                     if (err) reject(err);
-                                                    reject();
+                                                    resolve();
                                                 });
                                             });
                                         });
