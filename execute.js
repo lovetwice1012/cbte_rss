@@ -1131,13 +1131,16 @@ async function execute() {
 
                         // 指定した期間待機するためのユーティリティ関数
                         async function delay(duration) {
-                            return new Promise(resolve => resolve());
-                            //return new Promise(resolve => setTimeout(resolve, duration));
+                            return new Promise(resolve => setTimeout(resolve, duration));
                         }
 
                         const xml = await fetchRssWithRetry(rss[i].username, rss[i].userid, rss[i].id);
                         resolve(xml);
                     } else {
+                        async function delay(duration) {
+                            return new Promise(resolve => setTimeout(resolve, duration));
+                        }
+
                         const https = require('https');
                         https.get(`https://nitter.sprink.cloud/${rss[i].username}/rss`, (res) => {
                             let data = '';
@@ -1156,6 +1159,7 @@ async function execute() {
                                         });
                                     });
                                 }
+                                await delay(200);
                                 resolve(data);
                             });
                         }).on('error', (e) => {
