@@ -1131,7 +1131,8 @@ async function execute() {
 
                         // 指定した期間待機するためのユーティリティ関数
                         async function delay(duration) {
-                            return new Promise(resolve => setTimeout(resolve, duration));
+                            return new Promise(resolve => resolve());
+                            //return new Promise(resolve => setTimeout(resolve, duration));
                         }
 
                         const xml = await fetchRssWithRetry(rss[i].username, rss[i].userid, rss[i].id);
@@ -1207,6 +1208,7 @@ async function execute() {
             //linkのnitter.sprink.cloudをtwitter.comに変換し、変換したもののみの配列を作成
             const links = newItems.map((item) => {
                 item.link[0] = item.link[0].replace('nitter.sprink.cloud', 'twitter.com');
+                item.link[0] = item.link[0].replace('nitter.privacydev.net', 'twitter.com');
                 return item.link[0].replace('nitter.poast.org', 'twitter.com');
             });
 
