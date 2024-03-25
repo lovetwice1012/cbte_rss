@@ -1088,7 +1088,7 @@ async function execute() {
                             }
                         }
                         async function fetchRss(username, userId, rssId) {
-                            const url = `https://nitter.poast.org/${username}/rss`;
+                            const url = `https://nitter.privacydev.net/${username}/rss`;
                             const headers = {
                                 "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
                                 "accept-language": "ja;q=0.7",
