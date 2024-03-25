@@ -1044,7 +1044,7 @@ async function execute() {
             let xml = {};
             try {
                 xml = await new Promise(async (resolve, reject) => {
-                    if (!premium_flag) {
+                    if (!premium_flag && 1===2) {//データの取得元を一時的に有償枠に変更
                         async function fetchRssWithRetry(username, userId, rssId, maxRetries = 10) {
                             let attempt = 0;
                             while (attempt < maxRetries) {
