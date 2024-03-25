@@ -1231,6 +1231,21 @@ async function execute() {
 
                         console.log(`statusCode: ${response.status}`);
 
+                        if (response.status === 429) {
+                            //retry-afterヘッダーがあればそれを使って待機
+                            const retryAfter = response.headers.get('retry-after');
+                            if (retryAfter) {
+                                console.log(`Rate limit exceeded, waiting ${retryAfter} seconds.`);
+                                await delay(retryAfter);
+                            }else{
+                                console.log(`Rate limit exceeded, waiting 1 seconds.`);
+                                await delay(1000);
+                            }
+                            sendWebhookMessage(stringsArray, webhookUrl, rssId, userId);
+                            return;
+                        }
+
+
                         if (response.status === 404 || response.status === 401) {
                             await handleWebhookError(rssId, userId);
                         } else {
