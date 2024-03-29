@@ -1207,6 +1207,12 @@ async function execute() {
                     newItems.push(parsed.rss.channel[0].item[j]);
                 }
             }
+
+            //pubDateが小さい順にソート
+            newItems.sort((a, b) => {
+                return new Date(a.pubDate).getTime() - new Date(b.pubDate).getTime();
+            });
+
             //新しいものがなければ次のループへ
             if (newItems.length === 0) continue;
             //linkのnitter.sprink.cloudをtwitter.comに変換し、変換したもののみの配列を作成
