@@ -21,6 +21,10 @@ if (process.argv.includes('--premium')) {
     premium_flag = 1;
 }
 
+if (process.argv.includes('--premium_fast')) {
+    premium_flag = 2;
+}
+
 
 const userAgents = [
     "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Ubuntu Chromium/37.0.2062.94 Chrome/37.0.2062.94 Safari/537.36",
@@ -1036,7 +1040,7 @@ async function execute() {
                 resolve();
             });
         });
-        if (premium_flag === 1) rss = rss.filter((item) => item.premium_flag === 1);
+        rss = rss.filter((item) => item.premium_flag === premium_flag);
         //取得したデータを一つずつ処理
         for (let i = 0; i < rss.length; i++) {
             if (rss[i].webhook === null) continue;
@@ -1044,31 +1048,17 @@ async function execute() {
             let xml = {};
             try {
                 xml = await new Promise(async (resolve, reject) => {
-                    if (!premium_flag && 1===2) {//データの取得元を一時的に有償枠に変更
                         async function fetchRssWithRetry(username, userId, rssId, maxRetries = 10) {
                             let attempt = 0;
                             while (attempt < maxRetries) {
                                 try {
                                     const result = await fetchRss(username, userId, rssId);
-                                    // 成功時に10秒待機して結果を返す
-                                    console.log("Success. Waiting 10 seconds before returning result...");
-                                    await delay(10000); // 10秒待機
-                                    console.log("Returning result.");
                                     return result; // 成功時に結果を返す
                                 } catch (error) {
                                     console.error(`Attempt ${attempt + 1} failed: ${error.message}`);
-                                    // ECONNREFUSEDエラーの場合、2分待機
-                                    if (error.code === 'ECONNREFUSED') {
-                                        console.log("Connection refused, waiting 2 minutes before retrying...");
-                                        await delay(120000); // 2分待機
-                                        attempt++; // 再試行カウントを増やす
-                                        // 特定のエラーでの再試行は無限ループにならないよう注意
-                                        continue;
-                                    }
                                     // 404エラーの場合、10秒待機して再試行
                                     if (error.message === "Resource not found" && attempt < maxRetries - 1) {
-                                        console.log(`Waiting 10 seconds before retry ${attempt + 2}/${maxRetries}...`);
-                                        await delay(10000); // 10秒待機
+                                        console.log(`retry ${attempt + 2}/${maxRetries}...`);
                                         attempt++;
                                         continue;
                                     } else if (attempt === maxRetries - 1) {
@@ -1088,7 +1078,7 @@ async function execute() {
                             }
                         }
                         async function fetchRss(username, userId, rssId) {
-                            const url = `https://nitter.privacydev.net/${username}/rss`;
+                            const url = `https://nitter.sprink.cloud/${rss[i].username}/rss`;
                             const headers = {
                                 "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
                                 "accept-language": "ja;q=0.7",
@@ -1136,38 +1126,6 @@ async function execute() {
 
                         const xml = await fetchRssWithRetry(rss[i].username, rss[i].userid, rss[i].id);
                         resolve(xml);
-                    } else {
-                        async function delay(duration) {
-                            return new Promise(resolve => setTimeout(resolve, duration));
-                        }
-
-                        const https = require('https');
-                        https.get(`https://nitter.sprink.cloud/${rss[i].username}/rss`, (res) => {
-                            let data = '';
-                            res.on('data', (chunk) => {
-                                data += chunk;
-                            });
-                            res.on('end', async () => {
-                                if (res.statusCode === 404) {
-                                    await new Promise((resolve, reject) => {
-                                        connection.query('DELETE FROM rss WHERE id = ?', [rss[i].id], (err) => {
-                                            if (err) reject(err);
-                                            connection.query('INSERT INTO deregister_notification (userid, rssId, reasonId) VALUES (?, ?, ?)', [rss[i].userid, rss[i].id, 1], (err) => {
-                                                if (err) reject(err);
-                                                resolve();
-                                            });
-                                        });
-                                    });
-                                }
-                                await delay(200);
-                                resolve(data);
-                            });
-                        }).on('error', (e) => {
-                            console.error(e);
-
-                            reject(e);
-                        });
-                    }
                 })
             } catch (e) {
                 console.log(e);
@@ -1218,8 +1176,6 @@ async function execute() {
             //linkのnitter.sprink.cloudをtwitter.comに変換し、変換したもののみの配列を作成
             const links = newItems.map((item) => {
                 item.link[0] = item.link[0].replace('nitter.sprink.cloud', 'twitter.com');
-                item.link[0] = item.link[0].replace('nitter.privacydev.net', 'twitter.com');
-                return item.link[0].replace('nitter.poast.org', 'twitter.com');
             });
 
             async function sendWebhookMessage(stringsArray, webhookUrl, rssId, userId) {
