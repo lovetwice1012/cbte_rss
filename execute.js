@@ -1262,5 +1262,5 @@ connection.connect(async (err) => {
     await execute();
     setTimeout(() => {
         connection.end();
-    }, 10000);
+    }, 5000);
 });
