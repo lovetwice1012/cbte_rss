@@ -1162,7 +1162,7 @@ async function execute() {
             if (newItems.length === 0) continue;
             //linkのnitter.sprink.cloudをtwitter.comに変換し、変換したもののみの配列を作成
             const links = newItems.map((item) => {
-                item.link[0] = item.link[0].replace('nitter.sprink.cloud', 'twitter.com');
+                return item.link[0].replace('nitter.sprink.cloud', 'twitter.com');
             });
 
             async function sendWebhookMessage(stringsArray, webhookUrl, rssId, userId) {
