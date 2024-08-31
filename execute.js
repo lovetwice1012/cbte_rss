@@ -1040,6 +1040,7 @@ async function execute() {
                 resolve();
             });
         });
+        console.log(premium_flag)
         rss = rss.filter((item) => item.premium_flag === premium_flag);
         //取得したデータを一つずつ処理
         for (let i = 0; i < rss.length; i++) {
