@@ -1046,7 +1046,6 @@ async function execute() {
             if (rss[i].webhook === null) continue;
             if (rss[i].username === null) continue;
             let xml = {};
-            try {
                 xml = await new Promise(async (resolve, reject) => {
                         async function fetchRssWithRetry(username, userId, rssId, maxRetries = 10) {
                             let attempt = 0;
@@ -1127,20 +1126,8 @@ async function execute() {
                         const xml = await fetchRssWithRetry(rss[i].username, rss[i].userid, rss[i].id);
                         resolve(xml);
                 })
-            } catch (e) {
-                console.log(e);
-                if (e.match(/ECONNREFUSED/)) {
-                    console.log("wait 2 minutes to pass the rate limit(CONNREFUSED)")
-                    await new Promise((resolve, reject) => {
-                        setTimeout(() => {
-                            resolve();
-                        }
-                            , 120000);
-                    });
-                    i--;
-                }
-                continue;
-            }
+            
+
             //XMLをパース
             let parsed = {};
             try {
@@ -1256,6 +1243,7 @@ async function execute() {
         resolve();
     });
 }
+
 connection.connect(async (err) => {
     if (err) throw err;
     console.log('Connected!');
