@@ -1144,6 +1144,8 @@ async function execute() {
                 continue;
             }
 
+            console.log(parsed)
+
             //pubDateをunixtimestampに変換したものがlastextractedより新しいものだけを取得
             let newItems = [];
             if (parsed?.rss?.channel[0]?.item === undefined || parsed?.rss?.channel[0]?.item === null) continue;
