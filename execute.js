@@ -1041,7 +1041,6 @@ async function execute() {
             });
         });
         rss = rss.filter((item) => item.premium_flag === premium_flag);
-        console.log(rss)
         //取得したデータを一つずつ処理
         for (let i = 0; i < rss.length; i++) {
             if (rss[i].webhook === null) continue;
@@ -1144,7 +1143,6 @@ async function execute() {
                 continue;
             }
 
-            console.log(parsed)
 
             //pubDateをunixtimestampに変換したものがlastextractedより新しいものだけを取得
             let newItems = [];
@@ -1157,7 +1155,6 @@ async function execute() {
                 }
             }
 
-            console.log(newItems)
 
             //pubDateが小さい順にソート
             newItems.sort((a, b) => {
@@ -1166,12 +1163,10 @@ async function execute() {
 
             //新しいものがなければ次のループへ
             if (newItems.length === 0) continue;
-            console.log("sorted")
             //linkのnitter.sprink.cloudをtwitter.comに変換し、変換したもののみの配列を作成
             const links = newItems.map((item) => {
                 return item.link[0].replace('nitter.sprink.cloud', 'twitter.com');
             });
-            console.log(links)
             async function sendWebhookMessage(stringsArray, webhookUrl, rssId, userId) {
                 for (let content of stringsArray) {
                     const data = { content };
