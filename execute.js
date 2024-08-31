@@ -1149,12 +1149,15 @@ async function execute() {
             //pubDateをunixtimestampに変換したものがlastextractedより新しいものだけを取得
             let newItems = [];
             if (parsed?.rss?.channel[0]?.item === undefined || parsed?.rss?.channel[0]?.item === null) continue;
+            console.log(parsed.rss.channel[0].item)
             for (let j = 0; j < parsed.rss.channel[0].item.length; j++) {
                 let pubDate = new Date(parsed.rss.channel[0].item[j].pubDate).getTime();
                 if (pubDate > rss[i].lastextracted) {
                     newItems.push(parsed.rss.channel[0].item[j]);
                 }
             }
+
+            console.log(newItems)
 
             //pubDateが小さい順にソート
             newItems.sort((a, b) => {
