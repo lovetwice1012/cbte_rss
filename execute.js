@@ -1040,8 +1040,8 @@ async function execute() {
                 resolve();
             });
         });
-        console.log(premium_flag)
         rss = rss.filter((item) => item.premium_flag === premium_flag);
+        console.log(rss)
         //取得したデータを一つずつ処理
         for (let i = 0; i < rss.length; i++) {
             if (rss[i].webhook === null) continue;
