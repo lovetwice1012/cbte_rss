@@ -1161,11 +1161,12 @@ async function execute() {
 
             //新しいものがなければ次のループへ
             if (newItems.length === 0) continue;
+            console.log("sorted")
             //linkのnitter.sprink.cloudをtwitter.comに変換し、変換したもののみの配列を作成
             const links = newItems.map((item) => {
                 return item.link[0].replace('nitter.sprink.cloud', 'twitter.com');
             });
-
+            console.log(links)
             async function sendWebhookMessage(stringsArray, webhookUrl, rssId, userId) {
                 for (let content of stringsArray) {
                     const data = { content };
