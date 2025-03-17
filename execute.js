@@ -1029,9 +1029,196 @@ const userAgents = [
     "Mozilla/5.0 (iPhone; CPU iPhone OS 8_4 like Mac OS X) AppleWebKit/600.1.4 (KHTML, like Gecko) GSA/7.0.55539 Mobile/12H143 Safari/600.1.4"
 ]
 
+async function delay(duration) {
+    return new Promise(resolve => setTimeout(resolve, duration));
+}
+
+async function fetchRss(username, userId, rssId) {
+    const defaultUrl = `https://nitter.privacyredirect.com/${username}/rss`;
+    const fallbackUrl = `https://nitter.sprink.cloud/${username}/rss`;
+    const headers = {
+        "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
+        "accept-language": "ja;q=0.7",
+        "cache-control": "no-cache",
+        "pragma": "no-cache",
+        "sec-ch-ua": "\"Chromium\";v=\"122\", \"Not(A:Brand\";v=\"24\", \"Brave\";v=\"122\"",
+        "sec-ch-ua-mobile": "?0",
+        "sec-ch-ua-platform": "\"Windows\"",
+        "sec-fetch-dest": "document",
+        "sec-fetch-mode": "navigate",
+        "sec-fetch-site": "same-origin",
+        "sec-fetch-user": "?1",
+        "sec-gpc": "1",
+        "upgrade-insecure-requests": "1",
+        "user-agent": userAgents[Math.floor(Math.random() * userAgents.length)]
+    };
+
+    async function fetchFrom(url) {
+        try {
+            const response = await fetch(url, { method: "GET", headers: headers, body: null, referrerPolicy: "no-referrer" });
+            console.log(response.status);
+            if (response.status === 429) {
+                console.log("Rate limit exceeded, waiting 15 seconds.");
+                await delay(15000);
+                throw new Error("Rate limit exceeded");
+            }
+            if (response.status === 404) {
+                throw new Error("Resource not found");
+            }
+            const text = await response.text();
+            console.log("Fetch successful from " + url);
+            return text;
+        } catch (error) {
+            console.error("Error fetching from " + url + ":", error);
+            throw error;
+        }
+    }
+
+    try {
+        return await fetchFrom(defaultUrl);
+    } catch (error) {
+        console.error("Error fetching RSS from privacyredirect:", error.message);
+        return await fetchFrom(fallbackUrl);
+    }
+}
+
+async function fetchRssWithRetry(username, userId, rssId, maxRetries = 10) {
+    let attempt = 0;
+    while (attempt < maxRetries) {
+        try {
+            const result = await fetchRss(username, userId, rssId);
+            return result; // 成功時に結果を返す
+        } catch (error) {
+            console.error(`Attempt ${attempt + 1} failed: ${error.message}`);
+            if (error.message === "Resource not found" && attempt < maxRetries - 1) {
+                console.log(`retry ${attempt + 2}/${maxRetries}...`);
+                attempt++;
+                continue;
+            } else if (attempt === maxRetries - 1) {
+                console.log(`Max retries reached, deleting RSS ${rssId} for user ${userId}`);
+                await new Promise((resolve, reject) => {
+                    connection.query('DELETE FROM rss WHERE id = ?', [rssId], (err) => {
+                        if (err) reject(err);
+                        connection.query('INSERT INTO deregister_notification (userid, rssId, reasonId) VALUES (?, ?, ?)', [userId, rssId, 1], (err) => {
+                            if (err) reject(err);
+                            resolve();
+                        });
+                    });
+                });
+                return null;
+            }
+        }
+    }
+}
+
+async function processRss(item) {
+    if (item.webhook === null) return;
+    if (item.username === null) return;
+
+    let xml = await fetchRssWithRetry(item.username, item.userid, item.id);
+    if (xml === null) return;
+
+    let parsed = {};
+    try {
+        parsed = await new Promise((resolve, reject) => {
+            xml2js.parseString(xml, (err, result) => {
+                if (err) reject(err);
+                else resolve(result);
+            });
+        });
+    } catch (e) {
+        console.log(xml);
+        console.log(e);
+        return;
+    }
+
+    if (parsed?.rss?.channel?.[0]?.item === undefined || parsed?.rss?.channel?.[0]?.item === null) return;
+    let newItems = [];
+    for (let j = 0; j < parsed.rss.channel[0].item.length; j++) {
+        let pubDate = new Date(parsed.rss.channel[0].item[j].pubDate).getTime();
+        if (pubDate > item.lastextracted) {
+            newItems.push(parsed.rss.channel[0].item[j]);
+        }
+    }
+
+    newItems.sort((a, b) => {
+        return new Date(a.pubDate).getTime() - new Date(b.pubDate).getTime();
+    });
+
+    if (newItems.length === 0) return;
+
+    const links = newItems.map((it) => {
+        return it.link[0].replace(/nitter\.(sprink\.cloud|privacyredirect\.com)/, 'twitter.com');
+    });
+
+    async function sendWebhookMessage(stringsArray, webhookUrl, rssId, userId) {
+        for (let content of stringsArray) {
+            const data = { content };
+            try {
+                const response = await fetch(webhookUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(data)
+                });
+                console.log(`statusCode: ${response.status}`);
+                if (response.status === 429) {
+                    const retryAfter = response.headers.get('retry-after');
+                    if (retryAfter) {
+                        console.log(`Rate limit exceeded, waiting ${retryAfter} seconds.`);
+                        await delay(retryAfter * 1000);
+                    } else {
+                        console.log(`Rate limit exceeded, waiting 1 second.`);
+                        await delay(1000);
+                    }
+                    await sendWebhookMessage(stringsArray, webhookUrl, rssId, userId);
+                    return;
+                }
+                if (response.status === 404 || response.status === 401) {
+                    await handleWebhookError(rssId, userId);
+                } else {
+                    const responseBody = await response.text();
+                    await updateLastExtracted(rssId, item.username, item.webhook);
+                    console.log(responseBody);
+                }
+            } catch (error) {
+                console.error("Error handling webhook request: ", error);
+                break;
+            }
+        }
+    }
+
+    async function handleWebhookError(rssId, userId) {
+        await new Promise((resolve, reject) => {
+            connection.query('DELETE FROM rss WHERE id = ?', [rssId], (err) => {
+                if (err) return reject(err);
+                resolve();
+            });
+        });
+        const reasonId = 2;
+        await new Promise((resolve, reject) => {
+            connection.query('INSERT INTO deregister_notification (userid, rssId, reasonId) VALUES (?, ?, ?)', [userId, rssId, reasonId], (err) => {
+                if (err) return reject(err);
+                resolve();
+            });
+        });
+    }
+
+    async function updateLastExtracted(id, username, webhook) {
+        return new Promise((resolve, reject) => {
+            connection.query('UPDATE rss SET lastextracted = ? WHERE id = ? AND username = ? AND webhook = ?', [Date.now(), id, username, webhook], (err) => {
+                if (err) reject(err);
+                resolve();
+            });
+        });
+    }
+
+    await sendWebhookMessage(links, item.webhook, item.id, item.userid);
+}
+
 async function execute() {
     return new Promise(async (resolve, reject) => {
-        //RSSテーブルからデータを取得して変数rssに格納
         let rss = [];
         await new Promise(async (resolve, reject) => {
             connection.query('SELECT * FROM rss', (err, data) => {
@@ -1041,207 +1228,10 @@ async function execute() {
             });
         });
         rss = rss.filter((item) => item.premium_flag === premium_flag);
-        //取得したデータを一つずつ処理
-        for (let i = 0; i < rss.length; i++) {
-            if (rss[i].webhook === null) continue;
-            if (rss[i].username === null) continue;
-            let xml = {};
-                xml = await new Promise(async (resolve, reject) => {
-                        async function fetchRssWithRetry(username, userId, rssId, maxRetries = 10) {
-                            let attempt = 0;
-                            while (attempt < maxRetries) {
-                                try {
-                                    const result = await fetchRss(username, userId, rssId);
-                                    return result; // 成功時に結果を返す
-                                } catch (error) {
-                                    console.error(`Attempt ${attempt + 1} failed: ${error.message}`);
-                                    // 404エラーの場合、10秒待機して再試行
-                                    if (error.message === "Resource not found" && attempt < maxRetries - 1) {
-                                        console.log(`retry ${attempt + 2}/${maxRetries}...`);
-                                        attempt++;
-                                        continue;
-                                    } else if (attempt === maxRetries - 1) {
-                                        console.log(`Max retries reached, deleting RSS ${rssId} for user ${userId}`);
-                                        await new Promise((resolve, reject) => {
-                                            connection.query('DELETE FROM rss WHERE id = ?', [rssId], (err) => {
-                                                if (err) reject(err);
-                                                connection.query('INSERT INTO deregister_notification (userid, rssId, reasonId) VALUES (?, ?, ?)', [userId, rssId, 1], (err) => {
-                                                    if (err) reject(err);
-                                                    resolve();
-                                                });
-                                            });
-                                        });
-                                        return null;
-                                    }
-                                }
-                            }
-                        }
-                        async function fetchRss(username, userId, rssId) {
-                            const url = `https://nitter.sprink.cloud/${username}/rss`;
-                            const headers = {
-                                "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8",
-                                "accept-language": "ja;q=0.7",
-                                "cache-control": "no-cache",
-                                "pragma": "no-cache",
-                                "sec-ch-ua": "\"Chromium\";v=\"122\", \"Not(A:Brand\";v=\"24\", \"Brave\";v=\"122\"",
-                                "sec-ch-ua-mobile": "?0",
-                                "sec-ch-ua-platform": "\"Windows\"",
-                                "sec-fetch-dest": "document",
-                                "sec-fetch-mode": "navigate",
-                                "sec-fetch-site": "same-origin",
-                                "sec-fetch-user": "?1",
-                                "sec-gpc": "1",
-                                "upgrade-insecure-requests": "1",
-                                "user-agent": userAgents[Math.floor(Math.random() * userAgents.length)]
-                            };
 
-                            try {
-                                const response = await fetch(url, { method: "GET", headers: headers, body: null, referrerPolicy: "no-referrer" });
-                                console.log(response.status);
-
-                                if (response.status === 429) {
-                                    console.log("Rate limit exceeded, waiting 15 seconds.");
-                                    await delay(15000);
-                                    throw new Error("Rate limit exceeded");
-                                }
-
-                                if (response.status === 404) {
-                                    throw new Error("Resource not found");
-                                }
-
-                                const text = await response.text();
-                                console.log("Fetch successful.");
-                                return text;
-                            } catch (error) {
-                                console.error("Error fetching RSS:", error);
-                                throw error;
-                            }
-                        }
-
-                        // 指定した期間待機するためのユーティリティ関数
-                        async function delay(duration) {
-                            return new Promise(resolve => setTimeout(resolve, duration));
-                        }
-
-                        const xml = await fetchRssWithRetry(rss[i].username, rss[i].userid, rss[i].id);
-                        resolve(xml);
-                })
-            
-
-            //XMLをパース
-            let parsed = {};
-            try {
-                parsed = await new Promise((resolve, reject) => {
-                    xml2js.parseString(xml, (err, result) => {
-                        if (err) reject(err);
-                        resolve(result);
-                    });
-                });
-            } catch (e) {
-                console.log(xml);
-                console.log(e);
-                continue;
-            }
-
-
-            //pubDateをunixtimestampに変換したものがlastextractedより新しいものだけを取得
-            let newItems = [];
-            if (parsed?.rss?.channel[0]?.item === undefined || parsed?.rss?.channel[0]?.item === null) continue;
-            console.log(parsed.rss.channel[0].item)
-            for (let j = 0; j < parsed.rss.channel[0].item.length; j++) {
-                let pubDate = new Date(parsed.rss.channel[0].item[j].pubDate).getTime();
-                if (pubDate > rss[i].lastextracted) {
-                    newItems.push(parsed.rss.channel[0].item[j]);
-                }
-            }
-
-
-            //pubDateが小さい順にソート
-            newItems.sort((a, b) => {
-                return new Date(a.pubDate).getTime() - new Date(b.pubDate).getTime();
-            });
-
-            //新しいものがなければ次のループへ
-            if (newItems.length === 0) continue;
-            //linkのnitter.sprink.cloudをtwitter.comに変換し、変換したもののみの配列を作成
-            const links = newItems.map((item) => {
-                return item.link[0].replace('nitter.sprink.cloud', 'twitter.com');
-            });
-            async function sendWebhookMessage(stringsArray, webhookUrl, rssId, userId) {
-                for (let content of stringsArray) {
-                    const data = { content };
-
-                    try {
-                        const response = await fetch(webhookUrl, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json'
-                            },
-                            body: JSON.stringify(data)
-                        });
-
-                        console.log(`statusCode: ${response.status}`);
-
-                        if (response.status === 429) {
-                            //retry-afterヘッダーがあればそれを使って待機
-                            const retryAfter = response.headers.get('retry-after');
-                            if (retryAfter) {
-                                console.log(`Rate limit exceeded, waiting ${retryAfter} seconds.`);
-                                await delay(retryAfter);
-                            }else{
-                                console.log(`Rate limit exceeded, waiting 1 seconds.`);
-                                await delay(1000);
-                            }
-                            sendWebhookMessage(stringsArray, webhookUrl, rssId, userId);
-                            return;
-                        }
-
-
-                        if (response.status === 404 || response.status === 401) {
-                            await handleWebhookError(rssId, userId);
-                        } else {
-                            const responseBody = await response.text();
-                            updateLastExtracted(rssId, rss[i].username, rss[i].webhook);
-                            console.log(responseBody);
-                        }
-                    } catch (error) {
-                        console.error("Error handling webhook request: ", error);
-                        break; // If there's an error, stop processing.
-                    }
-                }
-            }
-
-            async function handleWebhookError(rssId, userId) {
-                // RSS項目を削除
-                await new Promise((resolve, reject) => {
-                    connection.query('DELETE FROM rss WHERE id = ?', [rssId], (err) => {
-                        if (err) return reject(err);
-                        resolve();
-                    });
-                });
-
-                // 削除した理由を登録（404または401でも理由IDは2）
-                const reasonId = 2; // 理由IDを2として設定
-                await new Promise((resolve, reject) => {
-                    connection.query('INSERT INTO deregister_notification (userid, rssId, reasonId) VALUES (?, ?, ?)', [userId, rssId, reasonId], (err) => {
-                        if (err) return reject(err);
-                        resolve();
-                    });
-                });
-            }
-
-            async function updateLastExtracted(id, username, webhook) {
-                // lastextractedを更新するロジック
-                return new Promise((resolve, reject) => {
-                    connection.query('UPDATE rss SET lastextracted = ? WHERE id = ? AND username = ? AND webhook = ?', [Date.now(), id, username, webhook], (err) => {
-                        if (err) reject(err);
-                        resolve();
-                    });
-                });
-            }
-            //webhookを送信
-            await sendWebhookMessage(links, rss[i].webhook, rss[i].id, rss[i].userid);
-        }
+        // 並列処理（Promise.allSettledを使用）により全てのRSSデータを一気に処理
+        const promises = rss.map(item => processRss(item));
+        await Promise.allSettled(promises);
         resolve();
     });
 }
