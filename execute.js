@@ -1080,7 +1080,8 @@ async function fetchRss(username, userId, rssId) {
     }
 
     try {
-        return await fetchFrom(defaultUrl);
+        //return await fetchFrom(defaultUrl);
+        return await fetchFrom(fallbackUrl);
     } catch (error) {
         console.error("Error fetching RSS from privacyredirect:", error.message);
         return await fetchFrom(fallbackUrl);
