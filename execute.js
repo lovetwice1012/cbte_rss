@@ -1065,6 +1065,11 @@ async function fetchRss(username, userId, rssId) {
             if (response.status === 404) {
                 throw new Error("Resource not found");
             }
+            if(response.status.startsWith(5)){
+                console.log("server error:" + response.status)
+                await delay(3000);
+                throw new Error("server error:" + response.status);
+            }
             const text = await response.text();
             console.log("Fetch successful from " + url);
             return text;
@@ -1082,7 +1087,7 @@ async function fetchRss(username, userId, rssId) {
     }
 }
 
-async function fetchRssWithRetry(username, userId, rssId, maxRetries = 10) {
+async function fetchRssWithRetry(username, userId, rssId, maxRetries = 20) {
     let attempt = 0;
     while (attempt < maxRetries) {
         try {
