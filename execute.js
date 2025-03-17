@@ -1065,7 +1065,7 @@ async function fetchRss(username, userId, rssId) {
             if (response.status === 404) {
                 throw new Error("Resource not found");
             }
-            if(response.status.startsWith(5)){
+            if(response.status.toString().startsWith(5)){
                 console.log("server error:" + response.status)
                 await delay(3000);
                 throw new Error("server error:" + response.status);
